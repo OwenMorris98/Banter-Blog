@@ -50,10 +50,8 @@ else
 
 
 @inject ApplicationDbContext _context;
-@inject UserManager<ApplicationUser> _userManager;
-@inject IdentityUserAccessor _userAccessor;
+@inject AuthenticationStateProvider _authStateProvider;
 @inject NavigationManager nav
-@inject IHttpContextAccessor _httpContextAccessor;
 @code {
 
     private bool showCallAlert = true;
@@ -70,7 +68,7 @@ else
     }
     public Author? Author { get; set; } = new();
 
-    public ApplicationUser user { get; set; }
+    public ApplicationUser? user { get; set; }
 
     bool posted;
 
@@ -78,15 +76,20 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        
-        user = await _userAccessor.GetRequiredUserAsync(_httpContextAccessor.HttpContext);
-        Author = await _context.Authors.Where(u => u.User.Id == user.Id)
-        .Include(b => b.Posts)
-        .FirstOrDefaultAsync();
+        user = await _context.Users.FindAsync(await getUserId());
 
-        if(Author != null && Author.Posts.Count() != 0)
+        if (user != null)
         {
-            hasPostedToday = PostedAlready(Author);
+
+            Author = await _context.Authors.Where(u => u.User.Id == user.Id)
+            .Include(b => b.Posts)
+            .FirstOrDefaultAsync();
+
+
+            if (Author != null && Author.Posts.Count() != 0)
+            {
+                hasPostedToday = PostedAlready(Author);
+            }
         }
     }
 
@@ -136,4 +139,11 @@ else
         }
         return false;
     }
+    public async Task<string> getUserId()
+    {
+        var user = (await _authStateProvider.GetAuthenticationStateAsync()).User;
+        var UserId = user.FindFirst(u => u.Type.Contains("nameidentifier"))?.Value;
+        return UserId;
+    }
+
 }

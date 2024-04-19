@@ -39,14 +39,13 @@ else
 
 
 @inject ApplicationDbContext _context;
-@inject IdentityUserAccessor _userAccessor;
+@inject AuthenticationStateProvider _authStateProvider;
 @inject NavigationManager nav
-@inject IHttpContextAccessor _httpContextAccessor;
 @code {
     RegisterAuthorForm model = new RegisterAuthorForm();
     bool success;
 
-    public ApplicationUser User { get; set; } 
+    public ApplicationUser? User { get; set; } 
 
     public class RegisterAuthorForm
     {
@@ -64,7 +63,8 @@ else
 
     private async Task OnValidSubmit(EditContext context)
     {
-        User = await _userAccessor.GetRequiredUserAsync(_httpContextAccessor.HttpContext);
+        User = await _context.Users.FindAsync(await getUserId());
+
         success = true;
         Author author = new Author(
             model.First_Name,
@@ -78,6 +78,13 @@ else
         await _context.SaveChangesAsync();
         StateHasChanged();
         
+    }
+
+    public async Task<string> getUserId()
+    {
+        var user = (await _authStateProvider.GetAuthenticationStateAsync()).User;
+        var UserId = user.FindFirst(u => u.Type.Contains("nameidentifier"))?.Value;
+        return UserId;
     }
 
 }
