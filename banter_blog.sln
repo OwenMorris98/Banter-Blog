@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34322.80
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "banter_blog", "banter_blog\banter_blog\banter_blog.csproj", "{EA9F6CD3-B799-41C3-B32F-7EE291DD874D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "banter_blog.Client", "banter_blog\banter_blog.Client\banter_blog.Client.csproj", "{56F8D8E6-F00F-4571-94E2-16BAC5F75C5E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EA9F6CD3-B799-41C3-B32F-7EE291DD874D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA9F6CD3-B799-41C3-B32F-7EE291DD874D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA9F6CD3-B799-41C3-B32F-7EE291DD874D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA9F6CD3-B799-41C3-B32F-7EE291DD874D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{56F8D8E6-F00F-4571-94E2-16BAC5F75C5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{56F8D8E6-F00F-4571-94E2-16BAC5F75C5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{56F8D8E6-F00F-4571-94E2-16BAC5F75C5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{56F8D8E6-F00F-4571-94E2-16BAC5F75C5E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CC460AB9-D0D1-4A14-9B14-B6BCF7F911DC}
+	EndGlobalSection
+EndGlobal

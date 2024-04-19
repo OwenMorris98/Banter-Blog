@@ -1,0 +1,133 @@
+﻿@page "/BlogPosts/Create"
+@rendermode InteractiveServer
+
+<h3>Write a new blog post</h3>
+
+@if (Author != null)
+{
+    @if (!posted && !hasPostedToday)
+    {
+
+
+        <p>Hello @Author.Nickname please create a new blog post</p>
+
+        <EditForm Model="@model" OnValidSubmit="OnValidSubmit" FormName="AuthorForm">
+            <DataAnnotationsValidator />
+            <MudCard>
+                <MudCardContent>
+                    <MudTextField Label="Title"
+                                  @bind-Value="model.Title" For="@(() => model.Title)" />
+                    <MudTextField T="string" Label="Blog Post" Variant="Variant.Outlined"
+                                    AutoGrow Lines="10" HelperText="This field grows when you enter new lines" @bind-Value="model.Body" For="@(() => model.Body)" />
+
+                 </MudCardContent>
+                 <MudCardActions>
+                     <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Post</MudButton>
+                 </MudCardActions>
+             </MudCard>
+         </EditForm>
+    }
+    else if(posted && !hasPostedToday)
+    {
+        <MudAlert Severity="Severity.Success" ShowCloseIcon="true" CloseIconClicked="(() => CloseMe(false))">Blog has been succesfully posted</MudAlert>
+
+    }
+
+    else
+    {
+        <MudAlert Severity="Severity.Error" ShowCloseIcon="true" CloseIconClicked="(() => CloseMe(false))">Author @Author.Nickname has already posted today</MudAlert>
+    }
+}
+else
+{
+    <h3>You are not signed up to be an author. Please sign up <a style="color:blue; text-decoration:underline; font-weight:bold" href="/Authors/Create">here</a></h3>
+}
+
+
+@inject ApplicationDbContext _context;
+@inject UserManager<ApplicationUser> _userManager;
+@inject IdentityUserAccessor _userAccessor;
+@inject NavigationManager nav
+@inject IHttpContextAccessor _httpContextAccessor;
+@code {
+
+    private bool showCallAlert = true;
+
+    CreateBlogPostForm model = new CreateBlogPostForm();
+
+    public class CreateBlogPostForm
+    {
+
+        public string Title { get; set; }
+
+        public string Body { get; set; }
+
+    }
+    public Author? Author { get; set; } = new();
+
+    public ApplicationUser user { get; set; }
+
+    bool posted;
+
+    bool hasPostedToday;
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = await _userAccessor.GetRequiredUserAsync(_httpContextAccessor.HttpContext);
+        Author = await _context.Authors.Where(u => u.User.Id == user.Id)
+        .Include(b => b.Posts)
+        .FirstOrDefaultAsync();
+
+        if(Author != null && Author.Posts.Count() != 0)
+        {
+            hasPostedToday = PostedAlready(Author);
+        }
+    }
+
+    public void authorSignUp()
+    {
+        nav.NavigateTo("/Author/Create");
+    }
+
+    private async Task OnValidSubmit(EditContext context)
+    {
+        BlogPost post = new BlogPost()
+            {
+                Title = model.Title,
+                Body = model.Body,
+                Likes = 0,
+                Author = Author,
+
+
+            };
+
+        _context.Add(post);
+        await _context.SaveChangesAsync();
+
+        posted = true;
+
+    }
+
+    private void CloseMe(bool value)
+    {
+
+        showCallAlert = false;
+
+    }
+
+    private void ShowAlerts()
+    {
+        showCallAlert = true;
+
+    }
+
+    private bool PostedAlready(Author author)
+    {
+        DateTime mostRecentCreated = author.Posts.OrderByDescending(d => d.CreatedDt).FirstOrDefault().CreatedDt.Value;
+        if(mostRecentCreated.Date == DateTime.Today)
+        {
+            return true;
+        }
+        return false;
+    }
+}

@@ -1,0 +1,71 @@
+﻿@page "/Authors/Create"
+@rendermode InteractiveServer
+
+@if (!success)
+{
+
+    <EditForm Model="@model" OnValidSubmit="OnValidSubmit" FormName="AuthorForm">
+        <DataAnnotationsValidator />
+        <MudCard>
+            <MudCardContent>
+                <MudTextField Label="First name" HelperText="Max. 8 characters"
+                @bind-Value="model.First_Name" For="@(() => model.First_Name)" />
+                <MudTextField Label="Last name" Class="mt-3"
+                @bind-Value="model.Last_Name" For="@(() => model.Last_Name)" />
+                <MudTextField Label="Nickname" HelperText="Choose a nickname" Class="mt-3"
+                @bind-Value="model.NickName" For="@(() => model.NickName)" />
+
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Register</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </EditForm>
+}
+else
+{
+    <p>You have now signed up to be an Author</p>
+}
+@inject ApplicationDbContext _context;
+@inject IdentityUserAccessor _userAccessor;
+@inject NavigationManager nav
+@inject IHttpContextAccessor _httpContextAccessor;
+@code {
+    RegisterAuthorForm model = new RegisterAuthorForm();
+    bool success;
+
+    public ApplicationUser User { get; set; } 
+
+    public class RegisterAuthorForm
+    {
+        [Required] 
+        public string First_Name { get; set; }
+
+        [Required]     
+        public string Last_Name { get; set; }
+
+        [Required]
+        [StringLength(15, ErrorMessage = "Nickname must be less than 15 characters")]
+        public string NickName { get; set; }
+
+    }
+
+    private async Task OnValidSubmit(EditContext context)
+    {
+        User = await _userAccessor.GetRequiredUserAsync(_httpContextAccessor.HttpContext);
+        success = true;
+        Author author = new Author(
+            model.First_Name,
+            model.Last_Name,
+            model.NickName,
+            User,
+            null
+        );
+
+        _context.Add(author);
+        await _context.SaveChangesAsync();
+        StateHasChanged();
+        
+    }
+
+}

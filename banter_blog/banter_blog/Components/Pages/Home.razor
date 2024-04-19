@@ -1,0 +1,35 @@
+﻿@page "/"
+
+<PageTitle>Home</PageTitle>
+
+
+
+@foreach(var post in posts)
+{
+  <MudCard Elevation="2" Outlined="true" Style="margin:1rem;">
+      <MudCardContent>
+          <MudText>@post.Title</MudText>
+          <MudText Typo="Typo.body2">@post.Body</MudText>
+          <MudText Typo="Typo.caption">Written by: @post.Author.Nickname</MudText>
+      </MudCardContent>
+            <MudCardActions>
+                <MudButton Variant="Variant.Text" Color="Color.Primary">Read More</MudButton>
+            </MudCardActions>
+  </MudCard>
+
+}
+
+
+
+@inject ApplicationDbContext _context;
+
+@code {
+   public List<BlogPost> posts = new List<BlogPost>();
+
+
+    protected async override Task OnInitializedAsync()
+    {
+         posts = await _context.BlogPosts.Include(a => a.Author).ToListAsync();
+
+    }
+}
