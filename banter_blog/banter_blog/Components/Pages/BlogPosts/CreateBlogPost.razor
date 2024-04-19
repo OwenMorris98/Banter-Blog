@@ -1,7 +1,10 @@
 ﻿@page "/BlogPosts/Create"
-@rendermode InteractiveServer
+@rendermode @(new InteractiveServerRenderMode(false))
+
 
 <h3>Write a new blog post</h3>
+
+
 
 @if (Author != null)
 {
@@ -44,6 +47,8 @@ else
 }
 
 
+
+
 @inject ApplicationDbContext _context;
 @inject UserManager<ApplicationUser> _userManager;
 @inject IdentityUserAccessor _userAccessor;
@@ -73,6 +78,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        
         user = await _userAccessor.GetRequiredUserAsync(_httpContextAccessor.HttpContext);
         Author = await _context.Authors.Where(u => u.User.Id == user.Id)
         .Include(b => b.Posts)

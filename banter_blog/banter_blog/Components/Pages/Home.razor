@@ -29,7 +29,7 @@
 
     protected async override Task OnInitializedAsync()
     {
-         posts = await _context.BlogPosts.Include(a => a.Author).ToListAsync();
+         posts = await _context.BlogPosts.Include(a => a.Author).OrderByDescending(b => b.CreatedDt).ToListAsync();
 
     }
 }

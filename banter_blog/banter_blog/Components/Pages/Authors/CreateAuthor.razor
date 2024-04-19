@@ -1,5 +1,9 @@
 ﻿@page "/Authors/Create"
-@rendermode InteractiveServer
+@rendermode @(new InteractiveServerRenderMode(false))
+
+
+<AuthorizeView Context="authContext">
+    <Authorized>
 
 @if (!success)
 {
@@ -26,6 +30,14 @@ else
 {
     <p>You have now signed up to be an Author</p>
 }
+</Authorized>
+<NotAuthorized>
+    <p>Please sign in to view this page</p>
+</NotAuthorized>
+
+</AuthorizeView>
+
+
 @inject ApplicationDbContext _context;
 @inject IdentityUserAccessor _userAccessor;
 @inject NavigationManager nav
