@@ -1,4 +1,5 @@
 ﻿@page "/"
+@rendermode @(new InteractiveServerRenderMode(false))
 
 <PageTitle>Home</PageTitle>
 
@@ -13,7 +14,16 @@
           <MudText Typo="Typo.caption">Written by: @post.Author.Nickname</MudText>
       </MudCardContent>
             <MudCardActions>
-                <MudButton Variant="Variant.Text" Color="Color.Primary">Read More</MudButton>
+            @if(post.isLiked)
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.ThumbUp" Color="Color.Primary" OnClick="() => likePost(post)" />
+            }
+            else
+            {
+                <MudIconButton Icon="@Icons.Material.Outlined.ThumbUp" Color="Color.Default" OnClick="() => likePost(post)"/>
+            }
+
+               @*  <MudButton Variant="Variant.Text" Color="Color.Primary">Read More</MudButton> *@
             </MudCardActions>
   </MudCard>
 
@@ -22,14 +32,128 @@
 
 
 @inject ApplicationDbContext _context;
-
+@inject AuthenticationStateProvider _authStateProvider;
+@inject NavigationManager nav
 @code {
-   public List<BlogPost> posts = new List<BlogPost>();
+    public string? UserId { get; set; }
+    public ApplicationUser? User { get; set; }
 
+    public bool isSignedIn { get; set; }
+
+    public bool isLIked { get; set; }
+
+    public List<BlogPostsViewModel> posts = new List<BlogPostsViewModel>();
 
     protected async override Task OnInitializedAsync()
     {
-         posts = await _context.BlogPosts.Include(a => a.Author).OrderByDescending(b => b.CreatedDt).ToListAsync();
+        var blogposts = await _context.BlogPosts
+        .Include(a => a.Author)
+        .Include(r => r.Reactions)
+        .OrderByDescending(b => b.CreatedDt)
+        .ToListAsync();
 
+        posts = mapBlogPostToVM(blogposts);
+
+        var user = getUserId();
+
+        if(user.Result is not null)
+        {
+            isSignedIn = true;
+            User = await _context.Users.FindAsync(UserId);
+
+            foreach (var post in posts)
+            {
+                foreach (var reactions in post.Reactions.ToList())
+                {               
+                    if (reactions.User.Id == User.Id)
+                    {
+                        post.isLiked = true;
+                    }
+                }
+            }
+        }
+    }
+
+
+
+
+
+
+    public async Task likePost(BlogPostsViewModel vm)
+    {
+        if(UserId != null)
+        {
+            var reaction = await _context.Reactions.Where(r => r.Post.Id == vm.Id && r.User.Id == UserId).FirstOrDefaultAsync();
+
+            if(reaction != null)
+            {
+                _context.Reactions.Remove(reaction);
+            }
+            else
+            {
+                var post = await _context.BlogPosts.FindAsync(vm.Id);
+                Reaction like = new Reaction()
+                    {
+                        Post = post,
+                        User = User
+                    };
+                _context.Reactions.Add(like);
+            }
+            await _context.SaveChangesAsync();
+
+            vm.isLiked = !isLIked;
+        }
+
+    }
+
+
+    public async Task<string> getUserId()
+    {
+        var user = (await _authStateProvider.GetAuthenticationStateAsync()).User;
+        var userId = user.FindFirst(u => u.Type.Contains("nameidentifier"))?.Value;
+        if(userId != null)
+            UserId = userId.ToString();
+
+        return userId;
+    }
+
+    public List<BlogPostsViewModel> mapBlogPostToVM(List<BlogPost> posts)
+    {
+        var vmList = new List<BlogPostsViewModel>();
+        foreach(var post in posts)
+        {
+            BlogPostsViewModel vm = new BlogPostsViewModel()
+                {
+                    Id = post.Id,
+                    Title = post.Title,
+                    Body = post.Body,
+                    Author = post.Author,
+                    CreatedDt = post.CreatedDt,
+                    Reactions = post.Reactions
+                };
+            vmList.Add(vm);
+
+
+        }
+        return vmList;
+    }
+
+    public class BlogPostsViewModel
+    {
+        public int Id { get; set; }
+
+        public string Title { get; set; }
+
+        public string Body { get; set; }
+
+        public int? Likes { get; set; }
+
+        public bool isLiked { get; set; }
+
+        public DateTime? CreatedDt { get; set; } = DateTime.UtcNow;
+
+        public Author Author { get; set; }
+
+        public ICollection<Reaction> Reactions { get; set; }
     }
 }

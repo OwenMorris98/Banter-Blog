@@ -10,6 +10,8 @@ namespace banter_blog.Data
 
         public DbSet<BlogPost> BlogPosts { get; set; }
 
+        public DbSet<Reaction> Reactions { get; set; }
+
         
     }
 }
