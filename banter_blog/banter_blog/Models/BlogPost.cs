@@ -14,6 +14,8 @@
 
         public Author Author { get; set; }
 
+        public ICollection<Reaction> Reactions { get; set; }
+
         public BlogPost Update(string title, string body)
         {
             this.Title = title;
