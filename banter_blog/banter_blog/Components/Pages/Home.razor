@@ -5,27 +5,30 @@
 
 
 
-@foreach(var post in posts)
+@foreach (var post in posts)
 {
-  <MudCard Elevation="2" Outlined="true" Style="margin:1rem;">
-      <MudCardContent>
-          <MudText>@post.Title</MudText>
-          <MudText Typo="Typo.body2">@post.Body</MudText>
-          <MudText Typo="Typo.caption">Written by: @post.Author.Nickname</MudText>
-      </MudCardContent>
-            <MudCardActions>
-            @if(post.isLiked)
+    <MudCard Elevation="2" Outlined="true" Style="margin:1rem;">
+        <MudCardContent>
+            <MudText>@post.Title</MudText>
+            <MudText Typo="Typo.body2">@post.Body</MudText>
+            <MudText Typo="Typo.caption">Written by: @post.Author.Nickname</MudText>
+        </MudCardContent>
+        <MudCardActions>
+            @if (post.isLiked)
             {
                 <MudIconButton Icon="@Icons.Material.Filled.ThumbUp" Color="Color.Primary" OnClick="() => likePost(post)" />
+                <MudText>@post.Likes.ToString()</MudText>
             }
             else
             {
-                <MudIconButton Icon="@Icons.Material.Outlined.ThumbUp" Color="Color.Default" OnClick="() => likePost(post)"/>
+                <MudIconButton Icon="@Icons.Material.Outlined.ThumbUp" Color="Color.Default" OnClick="() => likePost(post)" />
+                <MudText>@post.Likes.ToString()</MudText>
             }
 
-               @*  <MudButton Variant="Variant.Text" Color="Color.Primary">Read More</MudButton> *@
-            </MudCardActions>
-  </MudCard>
+
+            @*  <MudButton Variant="Variant.Text" Color="Color.Primary">Read More</MudButton> *@
+        </MudCardActions>
+    </MudCard>
 
 }
 
@@ -33,14 +36,14 @@
 
 @inject ApplicationDbContext _context;
 @inject AuthenticationStateProvider _authStateProvider;
-@inject NavigationManager nav
+@inject NavigationManager nav;
 @code {
     public string? UserId { get; set; }
     public ApplicationUser? User { get; set; }
 
     public bool isSignedIn { get; set; }
 
-    public bool isLIked { get; set; }
+    public bool isLiked { get; set; }
 
     public List<BlogPostsViewModel> posts = new List<BlogPostsViewModel>();
 
@@ -56,7 +59,7 @@
 
         var user = getUserId();
 
-        if(user.Result is not null)
+        if (user.Result is not null)
         {
             isSignedIn = true;
             User = await _context.Users.FindAsync(UserId);
@@ -64,11 +67,12 @@
             foreach (var post in posts)
             {
                 foreach (var reactions in post.Reactions.ToList())
-                {               
-                    if (reactions.User.Id == User.Id)
+                {
+                    if (reactions.User is not null && reactions.User.Id == User.Id)
                     {
                         post.isLiked = true;
                     }
+                    // post.Likes++;
                 }
             }
         }
@@ -81,13 +85,15 @@
 
     public async Task likePost(BlogPostsViewModel vm)
     {
-        if(UserId != null)
+        if (UserId != null)
         {
             var reaction = await _context.Reactions.Where(r => r.Post.Id == vm.Id && r.User.Id == UserId).FirstOrDefaultAsync();
 
-            if(reaction != null)
+            if (reaction != null)
             {
                 _context.Reactions.Remove(reaction);
+                vm.isLiked = false;
+                vm.Likes--;
             }
             else
             {
@@ -98,10 +104,13 @@
                         User = User
                     };
                 _context.Reactions.Add(like);
+                vm.isLiked = true;
+                vm.Likes++;
             }
             await _context.SaveChangesAsync();
 
-            vm.isLiked = !isLIked;
+
+
         }
 
     }
@@ -111,7 +120,7 @@
     {
         var user = (await _authStateProvider.GetAuthenticationStateAsync()).User;
         var userId = user.FindFirst(u => u.Type.Contains("nameidentifier"))?.Value;
-        if(userId != null)
+        if (userId != null)
             UserId = userId.ToString();
 
         return userId;
@@ -120,7 +129,7 @@
     public List<BlogPostsViewModel> mapBlogPostToVM(List<BlogPost> posts)
     {
         var vmList = new List<BlogPostsViewModel>();
-        foreach(var post in posts)
+        foreach (var post in posts)
         {
             BlogPostsViewModel vm = new BlogPostsViewModel()
                 {
@@ -129,31 +138,32 @@
                     Body = post.Body,
                     Author = post.Author,
                     CreatedDt = post.CreatedDt,
-                    Reactions = post.Reactions
+                    Reactions = post.Reactions,
+                    Likes = post.Reactions.Count()
                 };
             vmList.Add(vm);
 
 
         }
-        return vmList;
+    return vmList;
     }
 
     public class BlogPostsViewModel
     {
-        public int Id { get; set; }
+    public int Id { get; set; }
 
-        public string Title { get; set; }
+    public string Title { get; set; }
 
-        public string Body { get; set; }
+    public string Body { get; set; }
 
-        public int? Likes { get; set; }
+    public int Likes { get; set; } 
 
-        public bool isLiked { get; set; }
+    public bool isLiked { get; set; }
 
-        public DateTime? CreatedDt { get; set; } = DateTime.UtcNow;
+    public DateTime? CreatedDt { get; set; } = DateTime.UtcNow;
 
-        public Author Author { get; set; }
+    public Author Author { get; set; }
 
-        public ICollection<Reaction> Reactions { get; set; }
+    public ICollection<Reaction> Reactions { get; set; }
     }
 }
