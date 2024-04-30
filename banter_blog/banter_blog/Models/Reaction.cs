@@ -8,7 +8,7 @@ namespace banter_blog.Models
 
         public virtual BlogPost Post { get; set; }
 
-        public virtual ApplicationUser User { get; set; }
+        public virtual ApplicationUser? User { get; set; }
 
 
     }
