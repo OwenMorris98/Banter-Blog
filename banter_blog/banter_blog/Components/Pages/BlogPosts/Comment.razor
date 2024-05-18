@@ -1,0 +1,30 @@
+﻿@rendermode @(new InteractiveServerRenderMode(false))
+
+
+<MudStack AlignItems="AlignItems.Start" class="m-1">
+    <MudText>@comment.username</MudText>
+    <MudText Style="margin-left: 1rem;">@comment.comment</MudText>
+</MudStack>
+                
+            
+        
+    
+
+
+@inject ApplicationDbContext _context;
+@code {
+
+    [Parameter]
+    public BlogComment blogComment { get; set; }
+
+    public record CommentObj(string comment, string username);
+
+    private CommentObj comment { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        comment = new CommentObj(blogComment.Comment, blogComment.ApplicationUser.UserName);
+    }
+
+
+}

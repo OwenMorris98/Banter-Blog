@@ -1,7 +1,9 @@
 using banter_blog.Client.Pages;
+using banter_blog.Client.RequestModels;
 using banter_blog.Components;
 using banter_blog.Components.Account;
 using banter_blog.Data;
+using banter_blog.Models;
 using banter_blog.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -31,7 +33,7 @@ builder.Services.AddAuthentication(options =>
 var connectionString =
     builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
+builder.Services.AddDbContextFactory<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 //var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
@@ -61,6 +63,8 @@ builder.Services
     .AddServerSideBlazor()
     .AddHubOptions(options => { options.MaximumReceiveMessageSize = 32 * 1024; });
 
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:44356") });
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -85,6 +89,8 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddInteractiveWebAssemblyRenderMode()
     .AddAdditionalAssemblies(typeof(banter_blog.Client._Imports).Assembly);
+
+
 
 using (var scope = app.Services.CreateScope())
 {
@@ -118,7 +124,40 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+app.MapPost("/Comment/", async (PostBlogCommentRequest reqComment, ApplicationDbContext db) =>
+{
+    // Ensure the user exists
+    var user = await db.Users.FindAsync(reqComment.ApplicationUserId);
+    if (user == null)
+    {
+        return Results.BadRequest("User not found.");
+    }
+
+    // Ensure the blog post exists
+    var blogPost = await db.BlogPosts.FindAsync(reqComment.BlogPostId);
+    if (blogPost == null)
+    {
+        return Results.BadRequest("Blog post not found.");
+    }
+
+    // Create a new comment
+    var comment = new BlogComment
+    {
+        Comment = reqComment.Comment,
+        ApplicationUser = user,
+        BlogPost = blogPost,
+        
+    };
+
+    // Add the comment to the database
+    db.BlogComment.Add(comment);
+    await db.SaveChangesAsync();
+
+    return Results.Created($"/comment/{comment.Id}", comment);
+});
+
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
+
 
 app.Run();
