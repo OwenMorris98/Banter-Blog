@@ -2,12 +2,11 @@
 
 
 <EditForm OnValidSubmit="OnCommentSubmit" Model="commentModel" >
-    <textarea @bind="@commentModel.CommentText" class="form-control" placeholder="Leave comment here..."></textarea>
-    <button type="submit" class="btn btn-primary">Submit</button>
-    
+    <textarea @bind="@commentModel.CommentText" class="form-control" placeholder="Leave comment here..." rows="6"></textarea>
+    <MudButton type="submit" ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Style="margin-top:1rem;">Submit</MudButton>
 </EditForm>
 
-
+@inject NavigationManager nav;
 @inject HttpClient _request;
 @code {
 
@@ -20,8 +19,6 @@
 
     private CommentModel commentModel = new CommentModel();
 
-
-
     protected override void OnInitialized()
     {
         commentModel = new CommentModel();
@@ -31,14 +28,14 @@
     {
         if(!String.IsNullOrEmpty(commentModel.CommentText)) {
 
-         var request = new PostBlogCommentRequest(commentModel.CommentText, UserId, PostId);
+            var request = new PostBlogCommentRequest(commentModel.CommentText, UserId, PostId);
 
-        var response = await _request.PostAsJsonAsync<PostBlogCommentRequest>("/Comment/", request);
+            var response = await _request.PostAsJsonAsync<PostBlogCommentRequest>("/Comment/", request);
 
-        if(response.IsSuccessStatusCode)
-        {
-            
-        }
+            if(response.IsSuccessStatusCode)
+            {
+                nav.NavigateTo(nav.BaseUri, true);
+            }
         }
     }
 
