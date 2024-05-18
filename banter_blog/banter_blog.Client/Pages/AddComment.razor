@@ -1,0 +1,46 @@
+﻿@rendermode InteractiveAuto
+
+
+<EditForm OnValidSubmit="OnCommentSubmit" Model="commentModel" >
+    <textarea @bind="@commentModel.CommentText" class="form-control" placeholder="Leave comment here..." rows="6"></textarea>
+    <MudButton type="submit" ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Style="margin-top:1rem;">Submit</MudButton>
+</EditForm>
+
+@inject NavigationManager nav;
+@inject HttpClient _request;
+@code {
+
+
+    [Parameter]
+    public int PostId { get; set; }
+
+    [Parameter]
+    public string UserId { get; set; }
+
+    private CommentModel commentModel = new CommentModel();
+
+    protected override void OnInitialized()
+    {
+        commentModel = new CommentModel();
+    }
+
+    public async Task OnCommentSubmit()
+    {
+        if(!String.IsNullOrEmpty(commentModel.CommentText)) {
+
+            var request = new PostBlogCommentRequest(commentModel.CommentText, UserId, PostId);
+
+            var response = await _request.PostAsJsonAsync<PostBlogCommentRequest>("/Comment/", request);
+
+            if(response.IsSuccessStatusCode)
+            {
+                nav.NavigateTo(nav.BaseUri, true);
+            }
+        }
+    }
+
+    public class CommentModel
+    {
+        public string CommentText { get; set; }
+    }
+}

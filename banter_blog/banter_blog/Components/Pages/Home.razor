@@ -2,8 +2,18 @@
 @rendermode @(new InteractiveServerRenderMode(false))
 
 <PageTitle>Home</PageTitle>
+<MudDialogProvider />
 
+@if(isSignedIn && User.UserName.Contains("@")) {
 
+    <MudAlert Severity="Severity.Error">You have not set a username yet, please set it now by clicking
+        <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="@((e) => OnEditUsernameClick(UserId))">Here</MudButton>
+        </MudAlert>
+
+   
+    
+
+}
 
 @foreach (var post in posts)
 {
@@ -28,8 +38,38 @@
 
             @*  <MudButton Variant="Variant.Text" Color="Color.Primary">Read More</MudButton> *@
         </MudCardActions>
+        @if(isSignedIn)
+        {
+            <MudButton Variant="Variant.Text" OnClick="@(() => OpenDrawer(Anchor.End, post.Id))">Add Comment</MudButton>
+        }
+        
+        @if (post.Comments.Any())
+        {
+            <MudStack Spacing="2" Class="align-start" AlignItems="AlignItems.Start">
+                <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="OnExpandCollapseClick">@(_expanded ? "Hide" : "View Comments")</MudButton>
+                
+                <MudDivider />       
+                <MudCollapse Expanded="_expanded">
+                    @foreach(var commentItem in post.Comments)
+                    {                       
+                        <Comment blogComment="commentItem"></Comment>
+                    }
+                    
+                </MudCollapse>
+                
+        </MudStack>
+        }
+        
+     
     </MudCard>
 
+    <MudDrawer @bind-Open="@open" Anchor="@anchor" Elevation="1" Variant="@DrawerVariant.Temporary" Width="35vh">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h6">Add Comment</MudText>
+        </MudDrawerHeader>
+        <AddComment PostId="@drawerPostId" UserId="@UserId"></AddComment>
+    </MudDrawer>
+ 
 }
 
 
@@ -37,6 +77,7 @@
 @inject ApplicationDbContext _context;
 @inject AuthenticationStateProvider _authStateProvider;
 @inject NavigationManager nav;
+@inject IDialogService DialogService
 @code {
     public string? UserId { get; set; }
     public ApplicationUser? User { get; set; }
@@ -45,13 +86,24 @@
 
     public bool isLiked { get; set; }
 
+    bool _expanded = false;
+
+    bool showMbox = false;
+
+    bool open;
+    Anchor anchor;
+    int drawerPostId;
+
     public List<BlogPostsViewModel> posts = new List<BlogPostsViewModel>();
+
 
     protected async override Task OnInitializedAsync()
     {
         var blogposts = await _context.BlogPosts
         .Include(a => a.Author)
         .Include(r => r.Reactions)
+        .Include(c => c.Comments)
+            .ThenInclude(a => a.ApplicationUser)
         .OrderByDescending(b => b.CreatedDt)
         .ToListAsync();
 
@@ -79,7 +131,10 @@
     }
 
 
-
+    private void OnExpandCollapseClick()
+    {
+        _expanded = !_expanded;
+    }
 
 
 
@@ -139,31 +194,40 @@
                     Author = post.Author,
                     CreatedDt = post.CreatedDt,
                     Reactions = post.Reactions,
+                    Comments = post.Comments,
                     Likes = post.Reactions.Count()
                 };
             vmList.Add(vm);
 
 
         }
-    return vmList;
+        return vmList;
     }
 
-    public class BlogPostsViewModel
+    void OpenDrawer(Anchor anchor, int postId)
     {
-    public int Id { get; set; }
+        open = true;
+        this.anchor = anchor;
+        drawerPostId = postId;
 
-    public string Title { get; set; }
-
-    public string Body { get; set; }
-
-    public int Likes { get; set; } 
-
-    public bool isLiked { get; set; }
-
-    public DateTime? CreatedDt { get; set; } = DateTime.UtcNow;
-
-    public Author Author { get; set; }
-
-    public ICollection<Reaction> Reactions { get; set; }
     }
+
+    private async void OnEditUsernameClick(string UserId)
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("userId", UserId);
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+
+        var dialog = DialogService.Show<EditUsername>("Edit Username", parameters, options);
+        var result = await dialog.Result;
+
+        if(!result.Cancelled)
+        {
+            nav.NavigateTo(nav.BaseUri, true);
+        }
+
+    }
+
+    
+   
 }

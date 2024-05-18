@@ -1,13 +1,17 @@
 using banter_blog.Client.Pages;
+using banter_blog.Client.RequestModels;
+using banter_blog.Endpoints;
 using banter_blog.Components;
 using banter_blog.Components.Account;
 using banter_blog.Data;
+using banter_blog.Models;
 using banter_blog.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,7 +35,7 @@ builder.Services.AddAuthentication(options =>
 var connectionString =
     builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
+builder.Services.AddDbContextFactory<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 //var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
@@ -61,6 +65,10 @@ builder.Services
     .AddServerSideBlazor()
     .AddHubOptions(options => { options.MaximumReceiveMessageSize = 32 * 1024; });
 
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:44356") });
+
+builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options => options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -85,6 +93,8 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddInteractiveWebAssemblyRenderMode()
     .AddAdditionalAssemblies(typeof(banter_blog.Client._Imports).Assembly);
+
+
 
 using (var scope = app.Services.CreateScope())
 {
@@ -118,7 +128,10 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+app.RegisterBlogEndpoints();
+
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
+
 
 app.Run();

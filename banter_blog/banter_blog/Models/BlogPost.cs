@@ -10,11 +10,13 @@
 
         public int? Likes { get; set; }
 
-        public DateTime? CreatedDt { get; set; } = DateTime.UtcNow;
+        public DateTime? CreatedDt { get; init; } = DateTime.UtcNow;
 
-        public Author Author { get; set; }
+        public Author Author { get; init; }
 
         public ICollection<Reaction> Reactions { get; set; }
+
+        public ICollection<BlogComment> Comments { get; set; }
 
         public BlogPost Update(string title, string body)
         {
