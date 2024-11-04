@@ -57,7 +57,7 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, EmailSender>();
 builder.Services.Configure<AuthMessageSenderOptions>(builder.Configuration);
 //builder.Services.AddScoped<IUserInfo, UserInfo>();
-
+builder.Configuration.AddEnvironmentVariables();
 
 
 builder.Services.AddMudServices();
@@ -65,8 +65,14 @@ builder.Services
     .AddServerSideBlazor()
     .AddHubOptions(options => { options.MaximumReceiveMessageSize = 32 * 1024; });
 
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:44356") });
-
+builder.Services.AddScoped(sp =>
+{
+    var httpClient = new HttpClient();
+    var configuration = sp.GetRequiredService<IConfiguration>();
+    var baseUrl = Environment.GetEnvironmentVariable("BANTER_HTTPADDRESS", EnvironmentVariableTarget.Process);
+    httpClient.BaseAddress = new Uri(baseUrl);
+    return httpClient;
+});
 builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options => options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 
 var app = builder.Build();
@@ -132,6 +138,7 @@ app.RegisterBlogEndpoints();
 
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
-
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.Run();

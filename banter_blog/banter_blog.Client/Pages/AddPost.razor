@@ -1,5 +1,71 @@
-﻿<h3>AddPost</h3>
+﻿@if (AuthorId != 0)
+{
+    <EditForm Model="@model" OnValidSubmit="OnValidSubmit" FormName="AuthorForm">
+        <DataAnnotationsValidator/>
+        <MudCard>
+            <MudCardContent>
+                <MudTextField Label="Title"
+                              @bind-Value="model.Title" For="@(() => model.Title)"/>
+                <MudTextField T="string" Label="Blog Post" Variant="Variant.Outlined"
+                              AutoGrow Lines="10" HelperText="This field grows when you enter new lines" @bind-Value="model.Body" For="@(() => model.Body)"/>
 
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Post</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </EditForm>
+}
+else
+{
+    <span>Loading...</span>
+}
+
+
+@inject NavigationManager nav;
+@inject HttpClient _request;
 @code {
+    [Parameter]
+    public bool postedToday { get; set; }
     
+    [Parameter]
+    public int AuthorId { get; set; }
+    
+    public class PostModel
+    {
+        public string Title { get; set; }
+        
+        public string Body { get; set; }
+    }
+    PostModel model = new PostModel();
+
+
+    
+    private async Task OnValidSubmit()
+    {
+        
+        if(!String.IsNullOrEmpty(model.Body)) {
+
+            var request = new PostBlogRequest(model.Title, model.Body, AuthorId);
+
+            try
+            {
+                var response = await _request.PostAsJsonAsync<PostBlogRequest>("/BlogPost/", request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    nav.NavigateTo(nav.BaseUri, true);
+                }
+            }
+            catch
+            {
+                throw new Exception("Bad Request");
+            }
+
+
+        }
+        postedToday = true;
+
+    }
+
 }

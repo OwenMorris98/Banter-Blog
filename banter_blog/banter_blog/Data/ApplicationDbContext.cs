@@ -13,5 +13,7 @@ namespace banter_blog.Data
         public DbSet<Reaction> Reactions { get; set; }
 
         public DbSet<BlogComment> BlogComment { get; set; }
+
+        
     }
 }

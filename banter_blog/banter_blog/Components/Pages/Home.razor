@@ -15,12 +15,12 @@
 
 }
 
-@foreach (var post in posts)
+@foreach (var post in posts)  
 {
     <MudCard Elevation="2" Outlined="true" Style="margin:1rem;">
         <MudCardContent>
             <MudText>@post.Title</MudText>
-            <MudText Typo="Typo.body2">@post.Body</MudText>
+            <MudText Typo="Typo.body2" Style="white-space:pre-wrap;">@post.Body</MudText>
             <MudText Typo="Typo.caption">Written by: @post.Author.Nickname</MudText>
         </MudCardContent>
         <MudCardActions>
