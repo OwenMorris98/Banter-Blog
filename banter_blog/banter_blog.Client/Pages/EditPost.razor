@@ -1,5 +1,59 @@
-﻿<h3>EditPost</h3>
+﻿
+@if (isShowEdit)
+{
+    <EditForm OnValidSubmit="OnSubmit" Model="this">
+        <textarea @bind="@post_body" class="form-control" rows="10">@post_body</textarea>
+        <MudStack Row="true">
+        <MudButton type="submit" ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Style="margin-top:1rem;">Submit</MudButton>
+        <MudButton  Variant="Variant.Filled" Color="Color.Secondary" Style="margin-top:1rem;" OnClick="() => isShowEdit = !isShowEdit">Cancel</MudButton>
+        </MudStack>
+    </EditForm>
+}
 
+
+
+@inject NavigationManager nav;
+@inject HttpClient _request;
 @code {
     
+    [Parameter]
+    public int post_id { get; set; }
+    
+    [Parameter]
+    public string post_body { get; set; }
+    
+    [Parameter]
+    public bool isShowEdit { get; set; }
+    
+
+    public async Task OnSubmit()
+    {
+        if(!String.IsNullOrEmpty(post_body))
+        {
+
+
+            var request = new PutBlogPost(post_id, post_body);
+            
+
+            try
+            {
+                var response = await _request.PutAsJsonAsync<PutBlogPost>("/BlogPost/", request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    isShowEdit = false;
+                    StateHasChanged();
+                    nav.NavigateTo(nav.BaseUri + "BlogPosts/MyBlogs");
+                    
+                    
+
+                }
+            }
+            catch
+            {
+                throw new Exception("Bad Request");
+            }
+            
+        }
+    }
 }

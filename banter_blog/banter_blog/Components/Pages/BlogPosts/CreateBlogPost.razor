@@ -1,5 +1,5 @@
 ﻿@page "/BlogPosts/Create"
-@rendermode @(new InteractiveServerRenderMode(false))
+@rendermode @(new InteractiveServerRenderMode(true))
 
 
 <h3>Write a new blog post</h3>
@@ -14,21 +14,23 @@
 
         <p>Hello @Author.Nickname please create a new blog post</p>
 
-        <EditForm Model="@model" OnValidSubmit="OnValidSubmit" FormName="AuthorForm">
-            <DataAnnotationsValidator />
-            <MudCard>
-                <MudCardContent>
-                    <MudTextField Label="Title"
-                                  @bind-Value="model.Title" For="@(() => model.Title)" />
-                    <MudTextField T="string" Label="Blog Post" Variant="Variant.Outlined"
-                                    AutoGrow Lines="10" HelperText="This field grows when you enter new lines" @bind-Value="model.Body" For="@(() => model.Body)" />
-
-                 </MudCardContent>
-                 <MudCardActions>
-                     <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Post</MudButton>
-                 </MudCardActions>
-             </MudCard>
-         </EditForm>
+        @* <EditForm Model="@model" OnValidSubmit="OnValidSubmit" FormName="AuthorForm"> *@
+        @*     <DataAnnotationsValidator /> *@
+        @*     <MudCard> *@
+        @*         <MudCardContent> *@
+        @*             <MudTextField Label="Title" *@
+        @*                           @bind-Value="model.Title" For="@(() => model.Title)" /> *@
+        @*             <MudTextField T="string" Label="Blog Post" Variant="Variant.Outlined" *@
+        @*                             AutoGrow Lines="10" HelperText="This field grows when you enter new lines" @bind-Value="model.Body" For="@(() => model.Body)" /> *@
+        @* *@
+        @*          </MudCardContent> *@
+        @*          <MudCardActions> *@
+        @*              <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Post</MudButton> *@
+        @*          </MudCardActions> *@
+        @*      </MudCard> *@
+        @*  </EditForm> *@
+        
+        <AddPost postedToday="posted" AuthorId="Author.Id"/>
     }
     else if(posted && !hasPostedToday)
     {
@@ -98,24 +100,6 @@ else
         nav.NavigateTo("/Author/Create");
     }
 
-    private async Task OnValidSubmit(EditContext context)
-    {
-        BlogPost post = new BlogPost()
-            {
-                Title = model.Title,
-                Body = model.Body,
-                Likes = 0,
-                Author = Author,
-
-
-            };
-
-        _context.Add(post);
-        await _context.SaveChangesAsync();
-
-        posted = true;
-
-    }
 
     private void CloseMe(bool value)
     {

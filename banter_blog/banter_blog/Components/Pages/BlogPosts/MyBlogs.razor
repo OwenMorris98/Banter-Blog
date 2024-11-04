@@ -1,5 +1,115 @@
-﻿<h3>MyBlogs</h3>
+﻿@page "/BlogPosts/MyBlogs"
+@rendermode @(new InteractiveServerRenderMode(false))
 
+<h3>MyBlogs</h3>
+
+
+     <EditPost post_id=@current_post_id post_body=@current_post_body isShowEdit=@isShowEdit />
+
+
+@foreach (var post in posts)
+{
+<MudCard Elevation="2" Outlined="true" Style="margin:1rem;">
+    <MudCardContent>
+        <MudText>@post.Title</MudText>
+            <MudText Typo="Typo.body2" Style="white-space:pre-wrap;">@post.Body</MudText>
+           
+        <MudText Typo="Typo.caption">Written by: @post.Author.Nickname</MudText>
+    </MudCardContent>
+    <MudCardActions>
+        @if (post.isLiked)
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.ThumbUp" Color="Color.Primary" />
+            <MudText>@post.Likes.ToString()</MudText>
+        }
+    </MudCardActions>
+    <MudStack Spacing="2" Class="align-start" AlignItems="AlignItems.Start">
+        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => showEdit(post)">Edit</MudButton>
+    </MudStack>
+</MudCard>
+
+
+
+
+
+}
+
+
+
+@inject ApplicationDbContext _context;
+@inject AuthenticationStateProvider _authStateProvider;
 @code {
+
     
+    
+    public ApplicationUser? user { get; set; }
+    
+    public List<BlogPostsViewModel> posts = new();
+
+    public bool isShowEdit { get; set; } = false;
+
+    private int current_post_id { get; set; }
+    private string current_post_body { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = await _context.Users.FindAsync(await getUserId());
+
+        if (user != null)
+        {
+            var blogposts = await _context.BlogPosts
+                .Include(a => a.Author)
+                .Include(r => r.Reactions)
+                .Include(c => c.Comments)
+                .ThenInclude(a => a.ApplicationUser)
+                .Where(a => a.Author.User == user)
+                .OrderByDescending(b => b.CreatedDt)
+                .ToListAsync();
+            
+                posts = mapBlogPostToVM(blogposts);
+
+
+            
+        }
+    }
+
+    public async Task<string> getUserId()
+    {
+        var user = (await _authStateProvider.GetAuthenticationStateAsync()).User;
+        var UserId = user.FindFirst(u => u.Type.Contains("nameidentifier"))?.Value;
+        return UserId;
+    }
+
+    public List<BlogPostsViewModel> mapBlogPostToVM(List<BlogPost> posts)
+    {
+        var vmList = new List<BlogPostsViewModel>();
+        foreach (var post in posts)
+        {
+            BlogPostsViewModel vm = new BlogPostsViewModel()
+            {
+                Id = post.Id,
+                Title = post.Title,
+                Body = post.Body,
+                Author = post.Author,
+                CreatedDt = post.CreatedDt,
+                Reactions = post.Reactions,
+                Comments = post.Comments,
+                Likes = post.Reactions.Count()
+            };
+            vmList.Add(vm);
+
+
+        }
+        return vmList;
+    }
+
+    public void showEdit(BlogPostsViewModel post)
+    {
+        isShowEdit = !isShowEdit;
+        current_post_id = post.Id;
+        current_post_body = post.Body;
+    }
+    
+
+
 }

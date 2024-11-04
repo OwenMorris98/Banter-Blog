@@ -1,3 +1,3 @@
 ﻿namespace banter_blog.Client.RequestModels;
 
-public record PostBlog();
+public record PostBlogRequest(string title, string body, int authorId);

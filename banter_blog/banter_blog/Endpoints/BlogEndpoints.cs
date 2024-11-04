@@ -1,6 +1,8 @@
-﻿using banter_blog.Client.RequestModels;
+﻿using System.Security.Cryptography.X509Certificates;
+using banter_blog.Client.RequestModels;
 using banter_blog.Data;
 using banter_blog.Models;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Mvc;
 
 namespace banter_blog.Endpoints
@@ -55,6 +57,46 @@ namespace banter_blog.Endpoints
                 await db.SaveChangesAsync();
 
                 return Results.Ok();
+            });
+
+            app.MapPost("/BlogPost/", async (PostBlogRequest request, ApplicationDbContext db) =>
+            {
+                var authorExists = await db.Authors.FindAsync(request.authorId);
+
+                if (authorExists == null)
+                {
+                    return Results.BadRequest("Author not found.");
+                }
+                
+                BlogPost post = new BlogPost()
+                {
+                    Title = request.title,
+                    Body = request.body,
+                    Likes = 0,
+                    Author = authorExists,
+
+
+                };
+
+                db.Add(post);
+                await db.SaveChangesAsync();
+                
+                return Results.Created("/BlogPost/",post.Id);
+            });
+            
+            
+            app.MapPut("/BlogPost/", async (PutBlogPost request, ApplicationDbContext db) =>
+            {
+                var blogPost = await db.BlogPosts.FindAsync(request.id);
+                if (blogPost == null)
+                {
+                    return Results.BadRequest("Blog post not found.");
+                }
+                blogPost.Body  = request.body;
+                
+                await db.SaveChangesAsync();
+                
+                return Results.Created("/BlogPost/",blogPost.Id);
             });
         }
     }
