@@ -1,0 +1,61 @@
+﻿<MudCard Elevation="2" Outlined="true" Style="margin:1rem;">
+    <MudCardContent>
+        <MudText>@Post.Title</MudText>
+        <MudText Typo="Typo.body2" Style="white-space:pre-wrap;">@Post.Body</MudText>
+        <MudText Typo="Typo.caption">Written by: @Post.Author.Nickname</MudText>
+    </MudCardContent>
+    <MudCardActions>
+        @if (Post.isLiked)
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.ThumbUp" Color="Color.Primary" OnClick="() => likePost(Post)" />
+        }
+        else
+        {
+            <MudIconButton Icon="@Icons.Material.Outlined.ThumbUp" Color="Color.Default" OnClick="() => likePost(Post)" />
+        }
+
+        @*  <MudButton Variant="Variant.Text" Color="Color.Primary">Read More</MudButton> *@
+    </MudCardActions>
+
+</MudCard>
+
+@inject ApplicationDbContext _context;
+@code {
+
+    [Parameter]
+    public BlogPostsViewModel Post { get; set; }
+
+    [Parameter]
+    public ApplicationUser? User { get; set; }
+
+    private string? UserId => User.Id ?? null;
+
+    public bool IsLiked { get; set; }
+
+    public async Task likePost(BlogPostsViewModel vm)
+    {
+        if (UserId != null)
+        {
+            var reaction = await _context.Reactions.Where(r => r.Post.Id == vm.Id && r.User.Id == UserId).FirstOrDefaultAsync();
+
+            if (reaction != null)
+            {
+                _context.Reactions.Remove(reaction);
+            }
+            else
+            {
+                var post = await _context.BlogPosts.FindAsync(vm.Id);
+                Reaction like = new Reaction()
+                    {
+                        Post = post,
+                        User = User
+                    };
+                _context.Reactions.Add(like);
+            }
+            await _context.SaveChangesAsync();
+
+            vm.isLiked = !IsLiked;
+        }
+
+    }
+}

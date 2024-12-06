@@ -69,7 +69,7 @@ builder.Services.AddScoped(sp =>
 {
     var httpClient = new HttpClient();
     var configuration = sp.GetRequiredService<IConfiguration>();
-    var baseUrl = Environment.GetEnvironmentVariable("BANTER_HTTPADDRESS", EnvironmentVariableTarget.Process);
+    var baseUrl = Environment.GetEnvironmentVariable("BANTER_HTTPADDRESS", EnvironmentVariableTarget.Process );
     httpClient.BaseAddress = new Uri(baseUrl);
     return httpClient;
 });

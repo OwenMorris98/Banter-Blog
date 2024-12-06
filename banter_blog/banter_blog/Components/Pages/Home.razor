@@ -186,17 +186,7 @@
         var vmList = new List<BlogPostsViewModel>();
         foreach (var post in posts)
         {
-            BlogPostsViewModel vm = new BlogPostsViewModel()
-                {
-                    Id = post.Id,
-                    Title = post.Title,
-                    Body = post.Body,
-                    Author = post.Author,
-                    CreatedDt = post.CreatedDt,
-                    Reactions = post.Reactions,
-                    Comments = post.Comments,
-                    Likes = post.Reactions.Count()
-                };
+            BlogPostsViewModel vm = post.toViewmodel();
             vmList.Add(vm);
 
 

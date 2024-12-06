@@ -1,6 +1,6 @@
-﻿using banter_blog.Models;
+﻿using banter_blog.Migrations;
 
-namespace banter_blog.ViewModels
+namespace banter_blog.Models
 {
     public class BlogPostsViewModel
     {
@@ -10,7 +10,7 @@ namespace banter_blog.ViewModels
 
         public string Body { get; set; }
 
-        public int Likes { get; set; }
+        public int? Likes { get; set; }
 
         public bool isLiked { get; set; }
 
